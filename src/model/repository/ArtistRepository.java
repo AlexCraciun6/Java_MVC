@@ -2,6 +2,7 @@ package model.repository;
 
 import model.Artist;
 import model.Artwork;
+import model.Observable;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtistRepository {
+public class ArtistRepository extends Observable {
     private Repository repository;
 
     // Constructor
@@ -23,13 +24,21 @@ public class ArtistRepository {
         String sql = "INSERT INTO Artist(nume, data_nasterii, loc_nasterii, nationalitate, fotografie) VALUES('"
                 + artist.getNume() + "','" + artist.getDataNasterii() + "','" + artist.getLocNasterii() + "','"
                 + artist.getNationalitate() + "','" + artist.getFotografie() + "')";
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru ștergerea unui artist după id
     public boolean deleteArtist(int idArtist) {
         String sql = "DELETE FROM Artist WHERE id_artist = " + idArtist;
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru actualizarea unui artist
@@ -37,7 +46,11 @@ public class ArtistRepository {
         String sql = "UPDATE Artist SET nume = '" + artist.getNume() + "', data_nasterii = '" + artist.getDataNasterii()
                 + "', loc_nasterii = '" + artist.getLocNasterii() + "', nationalitate = '" + artist.getNationalitate()
                 + "', fotografie = '" + artist.getFotografie() + "' WHERE id_artist = " + artist.getIdArtist();
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru obținerea tuturor artiștilor

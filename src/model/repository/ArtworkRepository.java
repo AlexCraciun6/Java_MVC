@@ -1,6 +1,7 @@
 package model.repository;
 
 import model.Artwork;
+import model.Observable;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,7 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtworkRepository {
+public class ArtworkRepository extends Observable {
     private Repository repository;
 
     // Constructor
@@ -27,13 +28,21 @@ public class ArtworkRepository {
                 + artwork.getImagine1() + "', '"
                 + artwork.getImagine2() + "', '"
                 + artwork.getImagine3() + "')";
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru ștergerea unei opere de artă după id
     public boolean deleteArtwork(int idArtwork) {
         String sql = "DELETE FROM Artwork WHERE id_artwork = " + idArtwork;
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru actualizarea unei opere de artă
@@ -46,7 +55,11 @@ public class ArtworkRepository {
                 + "', imagine2 = '" + artwork.getImagine2()
                 + "', imagine3 = '" + artwork.getImagine3()
                 + "' WHERE id_artwork = " + artwork.getIdArtwork();
-        return repository.executeSQLCommand(sql);
+        boolean result = repository.executeSQLCommand(sql);
+        if (result) {
+            notifyObservers();
+        }
+        return result;
     }
 
     // Metoda pentru obținerea tuturor operelor de artă
