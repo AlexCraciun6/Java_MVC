@@ -7,7 +7,9 @@ import model.repository.ArtistRepository;
 import model.repository.ArtworkRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MuseumViewModel extends Observable {
     private ArtistRepository artistRepository;
@@ -168,5 +170,33 @@ public class MuseumViewModel extends Observable {
         return new String[]{"ID", "Artist ID", "Title", "Type", "Description", "Image 1", "Image 2", "Image 3"};
     }
 
+    public Map<String, Integer> getArtworksByTypeStatistics() {
+        Map<String, Integer> statistics = new HashMap<>();
 
+        // Group artworks by type and count
+        for (Artwork artwork : currentArtworks) {
+            String type = artwork.getTip();
+            statistics.put(type, statistics.getOrDefault(type, 0) + 1);
+        }
+
+        return statistics;
+    }
+
+    public Map<String, Integer> getArtworksByArtistStatistics() {
+        Map<String, Integer> statistics = new HashMap<>();
+        Map<Integer, String> artistNames = new HashMap<>();
+
+        // First, map artist IDs to names
+        for (Artist artist : currentArtists) {
+            artistNames.put(artist.getIdArtist(), artist.getNume());
+        }
+
+        // Group artworks by artist name and count
+        for (Artwork artwork : currentArtworks) {
+            String artistName = artistNames.getOrDefault(artwork.getArtistId(), "Unknown");
+            statistics.put(artistName, statistics.getOrDefault(artistName, 0) + 1);
+        }
+
+        return statistics;
+    }
 }

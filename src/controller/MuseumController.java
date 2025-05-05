@@ -7,6 +7,7 @@ import model.viewmodel.MuseumViewModel;
 import view.MuseumGUI;
 
 import java.util.List;
+import java.util.Map;
 
 public class MuseumController {
     private final MuseumViewModel viewModel;
@@ -385,5 +386,25 @@ public class MuseumController {
 
         String[] columnNames = {"ID", "Artist ID", "Title", "Type", "Description", "Image 1", "Image 2", "Image 3"};
         view.setArtworkTable(data, columnNames);
+    }
+
+
+    public void showStatistics() {
+        try {
+            // Make sure data is loaded
+            if (viewModel.getCurrentArtworks().isEmpty()) {
+                viewModel.loadArtworks();
+            }
+            if (viewModel.getCurrentArtists().isEmpty()) {
+                viewModel.loadArtists();
+            }
+
+            Map<String, Integer> artworksByType = viewModel.getArtworksByTypeStatistics();
+            Map<String, Integer> artworksByArtist = viewModel.getArtworksByArtistStatistics();
+
+            view.showStatisticsDialog(artworksByType, artworksByArtist);
+        } catch (Exception e) {
+            view.showMessage("Error", "Failed to load statistics: " + e.getMessage());
+        }
     }
 }

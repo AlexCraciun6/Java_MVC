@@ -2,14 +2,21 @@ package view;
 
 import controller.MuseumController;
 import model.Observer;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.DefaultPieDataset;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 public class MuseumGUI extends JFrame implements Observer {
     private JTextField txtArtistName, txtArtistBirthDate, txtArtistBirthPlace, txtArtistNationality, txtArtistPhoto;
@@ -23,6 +30,7 @@ public class MuseumGUI extends JFrame implements Observer {
     private JButton btnFilterArtworks;
     private JList<String> lstArtistArtworks;
     private DefaultListModel<String> artistArtworksListModel;
+    private JButton btnShowStatistics;
 
     private MuseumController controller;
 
@@ -78,6 +86,11 @@ public class MuseumGUI extends JFrame implements Observer {
         // Initialize artist artworks list
         artistArtworksListModel = new DefaultListModel<>();
         lstArtistArtworks = new JList<>(artistArtworksListModel);
+
+        // statistici
+        btnShowStatistics = new JButton("Show Statistics");
+        btnShowStatistics.addActionListener(e -> showStatisticsButtonClicked());
+
     }
 
     private void initUI() {
@@ -273,6 +286,7 @@ public class MuseumGUI extends JFrame implements Observer {
         panel.add(btnLoadArtworks);
         panel.add(btnSaveArtworksToCSV);
         panel.add(btnSaveArtworksToDOC);
+        panel.add(btnShowStatistics);
         return panel;
     }
 
@@ -488,6 +502,105 @@ public class MuseumGUI extends JFrame implements Observer {
                 getFilterArtistName(),
                 getFilterArtworkType()
         );
+    }
+
+    // Add this new method
+    private void showStatisticsButtonClicked() {
+        controller.showStatistics();
+    }
+
+    // Add this new method to create and display statistics dialog
+    public void showStatisticsDialog(Map<String, Integer> artworksByType, Map<String, Integer> artworksByArtist) {
+        // Create the dialog
+        JDialog dialog = new JDialog(this, "Museum Statistics", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(800, 600);
+        dialog.setLocationRelativeTo(this);
+
+        // Create tabbed pane for different charts
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        // Add chart by artwork type
+        JPanel typeChartPanel = createPieChart("Artworks by Type", artworksByType);
+        tabbedPane.addTab("By Type", typeChartPanel);
+
+        // Add chart by artist
+        JPanel artistChartPanel = createBarChart("Artworks by Artist", artworksByArtist);
+        tabbedPane.addTab("By Artist", artistChartPanel);
+
+        dialog.add(tabbedPane, BorderLayout.CENTER);
+
+        // Add close button
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(closeButton);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Show dialog
+        dialog.setVisible(true);
+    }
+
+    private JPanel createPieChart(String title, Map<String, Integer> data) {
+        // Create dataset
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+
+        // Add data to dataset
+        for (String key : data.keySet()) {
+            dataset.setValue(key, data.get(key));
+        }
+
+        // Create chart
+        JFreeChart chart = ChartFactory.createPieChart(
+                title,
+                dataset,
+                true, // legend
+                true, // tooltips
+                false // URLs
+        );
+
+        // Create panel
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 400));
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(chartPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createBarChart(String title, Map<String, Integer> data) {
+        // Create dataset
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        // Add data to dataset
+        for (String key : data.keySet()) {
+            dataset.setValue(data.get(key), "Count", key);
+        }
+
+        // Create chart
+        JFreeChart chart = ChartFactory.createBarChart(
+                title,
+                "Artist",
+                "Number of Artworks",
+                dataset,
+                PlotOrientation.VERTICAL,
+                false, // legend
+                true,  // tooltips
+                false  // URLs
+        );
+
+        // Customize chart
+        CategoryPlot plot = chart.getCategoryPlot();
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
+        renderer.setItemMargin(0.1);
+
+        // Create panel
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 400));
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(chartPanel, BorderLayout.CENTER);
+        return panel;
     }
 
     public static void main(String[] args) {
