@@ -1,0 +1,198 @@
+@startuml
+
+' Packages organized by MVC architecture
+package Model {
+  ' Core model classes
+  class Artist {
+    -idArtist: int
+    -nume: String
+    -dataNasterii: String
+    -locNasterii: String
+    -nationalitate: String
+    -fotografie: String
+    +Artist(idArtist: int, nume: String, dataNasterii: String, locNasterii: String, nationalitate: String, fotografie: String)
+    +getters()
+    +setters()
+  }
+
+  class Artwork {
+    -idArtwork: int
+    -artistId: int
+    -titlu: String
+    -tip: String
+    -descriere: String
+    -imagine1: String
+    -imagine2: String
+    -imagine3: String
+    +Artwork(idArtwork: int, artistId: int, titlu: String, tip: String, descriere: String, imagine1: String, imagine2: String, imagine3: String)
+    +getters()
+    +setters()
+  }
+
+  ' Observer pattern
+  abstract class Observable {
+    #observers: List<Observer>
+    +addObserver(observer: Observer): void
+    +removeObserver(observer: Observer): void
+    +notifyObservers(): void
+  }
+
+  interface Observer {
+    +update(): void
+  }
+
+  ' Repository
+  class Repository {
+    -connection: Connection
+    +Repository()
+    -connectToDatabase(): void
+    +openConnection(): void
+    +closeConnection(): void
+    +executeSQLCommand(sqlCommand: String): boolean
+    +executeSQLQuery(sqlQuery: String): ResultSet
+  }
+
+  class ArtistRepository {
+    -repository: Repository
+    +ArtistRepository()
+    +addArtist(artist: Artist): boolean
+    +deleteArtist(idArtist: int): boolean
+    +updateArtist(artist: Artist): boolean
+    +getAllArtists(): List<Artist>
+    +searchArtistByName(name: String): List<Artist>
+    +filterArtworks(artistName: String, artworkType: String): List<Artwork>
+  }
+
+  class ArtworkRepository {
+    -repository: Repository
+    +ArtworkRepository()
+    +addArtwork(artwork: Artwork): boolean
+    +deleteArtwork(idArtwork: int): boolean
+    +updateArtwork(artwork: Artwork): boolean
+    +getAllArtworks(): List<Artwork>
+    +searchArtworkByTitle(title: String): List<Artwork>
+    +getArtworksByArtistId(artistId: int): List<Artwork>
+    +saveArtworksToCSV(artworks: List<Artwork>, filePath: String): boolean
+    +saveArtworksToDOC(artworks: List<Artwork>, filePath: String): boolean
+  }
+}
+
+package View {
+  class MuseumGUI {
+    -artistTable: JTable
+    -artworkTable: JTable
+    -formFields: Map<String, JTextField>
+    -buttons: Map<String, JButton>
+    -controller: MuseumController
+    -artistArtworksList: JList<String>
+    -artistListModel: DefaultListModel<String>
+    +MuseumGUI()
+    -initComponents(): void
+    -createArtistPanel(): JPanel
+    -createArtworkPanel(): JPanel
+    -createFilterPanel(): JPanel
+    -createButtonPanel(): JPanel
+    +update(): void
+    +setArtistTable(data: Object[][], columnNames: String[]): void
+    +setArtworkTable(data: Object[][], columnNames: String[]): void
+    +showMessage(title: String, message: String): void
+    +displayArtistArtworks(artworkTitles: List<String>): void
+    +showStatisticsDialog(byType: Map<String, Integer>, byArtist: Map<String, Integer>): void
+    +getArtistName(): String
+    +getArtistBirthDate(): String
+    +getArtistBirthPlace(): String
+    +getArtistNationality(): String
+    +getArtistPhoto(): String
+    +getArtworkTitle(): String
+    +getArtworkArtistId(): int
+    +getArtworkType(): String
+    +getArtworkDescription(): String
+    +getArtworkImages(): String[]
+    +getFilterArtistName(): String
+    +getFilterArtworkType(): String
+    +main(args: String[]): void
+  }
+}
+
+package Controller {
+  class MuseumController {
+    -view: MuseumGUI
+    -viewModel: MuseumViewModel
+    +MuseumController(view: MuseumGUI)
+    +addArtist(name: String, birthDate: String, birthPlace: String, nationality: String, photo: String): void
+    +updateArtist(name: String, birthDate: String, birthPlace: String, nationality: String, photo: String): void
+    +deleteArtist(name: String): void
+    +searchArtist(name: String): void
+    +addArtwork(artistId: int, title: String, type: String, description: String, images: String[]): void
+    +updateArtwork(artistId: int, title: String, type: String, description: String, images: String[]): void
+    +deleteArtwork(title: String): void
+    +searchArtwork(title: String): void
+    +loadArtists(): void
+    +loadArtworks(): void
+    +loadArtistArtworks(artistId: int): void
+    +saveArtworksToCSV(): void
+    +saveArtworksToDOC(): void
+    +filterArtworks(artistName: String, artworkType: String): void
+    +showStatistics(): void
+    -displayArtists(artists: List<Artist>): void
+    -displayArtworks(artworks: List<Artwork>): void
+  }
+
+  class MuseumViewModel {
+    -artistRepository: ArtistRepository
+    -artworkRepository: ArtworkRepository
+    -currentArtists: List<Artist>
+    -currentArtworks: List<Artwork>
+    -currentArtistArtworks: List<String>
+    +MuseumViewModel()
+    +loadArtists(): void
+    +loadArtworks(): void
+    +loadArtistArtworks(artistId: int): void
+    +addArtist(artist: Artist): boolean
+    +updateArtist(artist: Artist): boolean
+    +deleteArtist(artistId: int): boolean
+    +searchArtists(name: String): List<Artist>
+    +addArtwork(artwork: Artwork): boolean
+    +updateArtwork(artwork: Artwork): boolean
+    +deleteArtwork(artworkId: int): boolean
+    +searchArtworks(title: String): List<Artwork>
+    +filterArtworks(artistName: String, artworkType: String): List<Artwork>
+    +saveArtworksToCSV(filePath: String): boolean
+    +saveArtworksToDOC(filePath: String): boolean
+    +getTableData(): Object[][]
+    +getColumnNames(): String[]
+    +getStatistics(): Map<String, Integer>
+  }
+}
+
+package Service {
+  class StatisticsService {
+    +{static} createPieChart(title: String, data: Map<String, Integer>): JPanel
+    +{static} createBarChart(title: String, data: Map<String, Integer>): JPanel
+  }
+}
+
+' Relationships
+Artist "1" -- "0..*" Artwork : creates
+
+' Repository relationships
+ArtistRepository --> Repository : uses
+ArtworkRepository --> Repository : uses
+ArtistRepository --|> Observable : extends
+ArtworkRepository --|> Observable : extends
+
+' Observer pattern
+MuseumGUI --|> Observer : implements
+MuseumViewModel --|> Observable : extends
+
+' MVC relationships
+MuseumController --> MuseumViewModel : uses
+MuseumController --> MuseumGUI : references
+MuseumGUI --> MuseumController : uses
+MuseumViewModel --> ArtistRepository : uses
+MuseumViewModel --> ArtworkRepository : uses
+
+' Service relationships
+MuseumGUI ..> StatisticsService : uses
+
+@enduml

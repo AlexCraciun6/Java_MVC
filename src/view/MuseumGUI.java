@@ -2,6 +2,7 @@ package view;
 
 import controller.MuseumController;
 import model.Observer;
+import model.service.StatisticsService;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -37,10 +38,11 @@ public class MuseumGUI extends JFrame implements Observer {
     public MuseumGUI() {
         initComponents();
         initUI();
-        registerListeners();
 
         // Create controller and pass this view
         controller = new MuseumController(this);
+
+        registerListeners();
     }
 
     private void initComponents() {
@@ -509,7 +511,6 @@ public class MuseumGUI extends JFrame implements Observer {
         controller.showStatistics();
     }
 
-    // Add this new method to create and display statistics dialog
     public void showStatisticsDialog(Map<String, Integer> artworksByType, Map<String, Integer> artworksByArtist) {
         // Create the dialog
         JDialog dialog = new JDialog(this, "Museum Statistics", true);
@@ -521,11 +522,11 @@ public class MuseumGUI extends JFrame implements Observer {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         // Add chart by artwork type
-        JPanel typeChartPanel = createPieChart("Artworks by Type", artworksByType);
+        JPanel typeChartPanel = StatisticsService.createPieChart("Artworks by Type", artworksByType);
         tabbedPane.addTab("By Type", typeChartPanel);
 
         // Add chart by artist
-        JPanel artistChartPanel = createBarChart("Artworks by Artist", artworksByArtist);
+        JPanel artistChartPanel = StatisticsService.createBarChart("Artworks by Artist", artworksByArtist);
         tabbedPane.addTab("By Artist", artistChartPanel);
 
         dialog.add(tabbedPane, BorderLayout.CENTER);
@@ -539,68 +540,6 @@ public class MuseumGUI extends JFrame implements Observer {
 
         // Show dialog
         dialog.setVisible(true);
-    }
-
-    private JPanel createPieChart(String title, Map<String, Integer> data) {
-        // Create dataset
-        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
-
-        // Add data to dataset
-        for (String key : data.keySet()) {
-            dataset.setValue(key, data.get(key));
-        }
-
-        // Create chart
-        JFreeChart chart = ChartFactory.createPieChart(
-                title,
-                dataset,
-                true, // legend
-                true, // tooltips
-                false // URLs
-        );
-
-        // Create panel
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(500, 400));
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(chartPanel, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel createBarChart(String title, Map<String, Integer> data) {
-        // Create dataset
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
-        // Add data to dataset
-        for (String key : data.keySet()) {
-            dataset.setValue(data.get(key), "Count", key);
-        }
-
-        // Create chart
-        JFreeChart chart = ChartFactory.createBarChart(
-                title,
-                "Artist",
-                "Number of Artworks",
-                dataset,
-                PlotOrientation.VERTICAL,
-                false, // legend
-                true,  // tooltips
-                false  // URLs
-        );
-
-        // Customize chart
-        CategoryPlot plot = chart.getCategoryPlot();
-        BarRenderer renderer = (BarRenderer) plot.getRenderer();
-        renderer.setItemMargin(0.1);
-
-        // Create panel
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(500, 400));
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(chartPanel, BorderLayout.CENTER);
-        return panel;
     }
 
     public static void main(String[] args) {
