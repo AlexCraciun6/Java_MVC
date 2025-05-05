@@ -19,6 +19,112 @@ public class MuseumController {
 
         // Register view as observer for the ViewModel
         viewModel.addObserver((Observer) view);
+
+        registerEventHandlers();
+    }
+
+    private void registerEventHandlers() {
+        // Artist buttons
+        view.getBtnAddArtist().addActionListener(e ->
+                addArtist(view.getArtistName(), view.getArtistBirthDate(),
+                        view.getArtistBirthPlace(), view.getArtistNationality(), view.getArtistPhoto()));
+
+        view.getBtnUpdateArtist().addActionListener(e ->
+                updateArtist(view.getArtistName(), view.getArtistBirthDate(),
+                        view.getArtistBirthPlace(), view.getArtistNationality(), view.getArtistPhoto()));
+
+        view.getBtnDeleteArtist().addActionListener(e -> deleteArtist(view.getArtistName()));
+
+        view.getBtnSearchArtist().addActionListener(e -> searchArtist(view.getArtistName()));
+
+        // Artwork buttons
+        view.getBtnAddArtwork().addActionListener(e ->
+                addArtwork(view.getArtworkArtistId(), view.getArtworkTitle(),
+                        view.getArtworkType(), view.getArtworkDescription(),
+                        view.getArtworkImage1(), view.getArtworkImage2(), view.getArtworkImage3()));
+
+        view.getBtnUpdateArtwork().addActionListener(e ->
+                updateArtwork(view.getArtworkArtistId(), view.getArtworkTitle(),
+                        view.getArtworkType(), view.getArtworkDescription(),
+                        view.getArtworkImage1(), view.getArtworkImage2(), view.getArtworkImage3()));
+
+        view.getBtnDeleteArtwork().addActionListener(e -> deleteArtwork(view.getArtworkTitle()));
+
+        view.getBtnSearchArtwork().addActionListener(e -> searchArtwork(view.getArtworkTitle()));
+
+        // Data loading buttons
+        view.getBtnLoadArtists().addActionListener(e -> loadArtists());
+        view.getBtnLoadArtworks().addActionListener(e -> loadArtworks());
+
+        // Export buttons
+        view.getBtnSaveArtworksToCSV().addActionListener(e -> saveArtworksToCSV());
+        view.getBtnSaveArtworksToDOC().addActionListener(e -> saveArtworksToDOC());
+
+        // Filter button
+        view.getBtnFilterArtworks().addActionListener(e ->
+                filterArtworks(view.getFilterArtistName(), view.getFilterArtworkType()));
+
+        // Statistics button
+        view.getBtnShowStatistics().addActionListener(e -> showStatistics());
+
+        // Table selection listeners
+        view.getTblArtists().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = view.getTblArtists().getSelectedRow();
+                if (selectedRow >= 0) {
+                    int artistId = (int) view.getTblArtists().getValueAt(selectedRow, 0);
+                    loadArtistArtworks(artistId);
+                }
+            }
+        });
+
+        view.getTblArtworks().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = view.getTblArtworks().getSelectedRow();
+                if (selectedRow >= 0) {
+                    // No need to implement this if you don't need to handle artwork selection
+                    // But you could add functionality here if needed
+                }
+            }
+        });
+
+
+        // Table selection listeners for Artists
+        view.getTblArtists().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = view.getTblArtists().getSelectedRow();
+                if (selectedRow >= 0) {
+                    // Get the artist ID from the table
+                    int artistId = (int) view.getTblArtists().getValueAt(selectedRow, 0);
+                    // Load this artist's artworks
+                    loadArtistArtworks(artistId);
+
+                    // Populate artist form fields
+                    view.setArtistName((String) view.getTblArtists().getValueAt(selectedRow, 1));
+                    view.setArtistBirthDate((String) view.getTblArtists().getValueAt(selectedRow, 2));
+                    view.setArtistBirthPlace((String) view.getTblArtists().getValueAt(selectedRow, 3));
+                    view.setArtistNationality((String) view.getTblArtists().getValueAt(selectedRow, 4));
+                    view.setArtistPhoto((String) view.getTblArtists().getValueAt(selectedRow, 5));
+                }
+            }
+        });
+
+        // Table selection listeners for Artworks
+        view.getTblArtworks().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = view.getTblArtworks().getSelectedRow();
+                if (selectedRow >= 0) {
+                    // Populate artwork form fields
+                    view.setArtworkArtistId(String.valueOf(view.getTblArtworks().getValueAt(selectedRow, 1)));
+                    view.setArtworkTitle((String) view.getTblArtworks().getValueAt(selectedRow, 2));
+                    view.setArtworkType((String) view.getTblArtworks().getValueAt(selectedRow, 3));
+                    view.setArtworkDescription((String) view.getTblArtworks().getValueAt(selectedRow, 4));
+                    view.setArtworkImage1((String) view.getTblArtworks().getValueAt(selectedRow, 5));
+                    view.setArtworkImage2((String) view.getTblArtworks().getValueAt(selectedRow, 6));
+                    view.setArtworkImage3((String) view.getTblArtworks().getValueAt(selectedRow, 7));
+                }
+            }
+        });
     }
 
     // Artist management methods

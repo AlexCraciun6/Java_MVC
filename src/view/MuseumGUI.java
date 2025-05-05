@@ -3,14 +3,6 @@ package view;
 import controller.MuseumController;
 import model.Observer;
 import model.service.StatisticsService;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -41,8 +33,6 @@ public class MuseumGUI extends JFrame implements Observer {
 
         // Create controller and pass this view
         controller = new MuseumController(this);
-
-        registerListeners();
     }
 
     private void initComponents() {
@@ -114,75 +104,6 @@ public class MuseumGUI extends JFrame implements Observer {
         setVisible(true);
     }
 
-    private void registerListeners() {
-        btnAddArtist.addActionListener(e -> addArtistButtonClicked());
-        btnUpdateArtist.addActionListener(e -> updateArtistButtonClicked());
-        btnDeleteArtist.addActionListener(e -> deleteArtistButtonClicked());
-        btnSearchArtist.addActionListener(e -> searchArtistButtonClicked());
-
-        btnAddArtwork.addActionListener(e -> addArtworkButtonClicked());
-        btnUpdateArtwork.addActionListener(e -> updateArtworkButtonClicked());
-        btnDeleteArtwork.addActionListener(e -> deleteArtworkButtonClicked());
-        btnSearchArtwork.addActionListener(e -> searchArtworkButtonClicked());
-
-        btnSaveArtworksToCSV.addActionListener(e -> saveArtworksToCSVButtonClicked());
-        btnSaveArtworksToDOC.addActionListener(e -> saveArtworksToDOCButtonClicked());
-
-        btnLoadArtists.addActionListener(e -> loadArtistsButtonClicked());
-        btnLoadArtworks.addActionListener(e -> loadArtworksButtonClicked());
-
-        btnFilterArtworks.addActionListener(e -> filterArtworksButtonClicked());
-
-        // Listener for artist selection
-        tblArtists.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && tblArtists.getSelectedRow() != -1) {
-                int row = tblArtists.getSelectedRow();
-                txtArtistName.setText(tblArtists.getValueAt(row, 1).toString());
-                txtArtistBirthDate.setText(tblArtists.getValueAt(row, 2).toString());
-                txtArtistBirthPlace.setText(tblArtists.getValueAt(row, 3).toString());
-                txtArtistNationality.setText(tblArtists.getValueAt(row, 4).toString());
-                txtArtistPhoto.setText(tblArtists.getValueAt(row, 5).toString());
-
-                // Load artist's artworks
-                int artistId = (int) tblArtists.getValueAt(row, 0);
-                controller.loadArtistArtworks(artistId);
-            }
-        });
-
-        // Listener for artwork selection
-        tblArtworks.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && tblArtworks.getSelectedRow() != -1) {
-                int row = tblArtworks.getSelectedRow();
-                txtArtworkArtistId.setText(tblArtworks.getValueAt(row, 1).toString());
-                txtArtworkTitle.setText(tblArtworks.getValueAt(row, 2).toString());
-                txtArtworkType.setText(tblArtworks.getValueAt(row, 3).toString());
-                txtArtworkDescription.setText(tblArtworks.getValueAt(row, 4).toString());
-
-                try {
-                    Object value1 = tblArtworks.getValueAt(row, 5);
-                    Object value2 = tblArtworks.getValueAt(row, 6);
-                    Object value3 = tblArtworks.getValueAt(row, 7);
-
-                    txtArtworkImage1.setText(value1 != null ? value1.toString() : "");
-                    txtArtworkImage2.setText(value2 != null ? value2.toString() : "");
-                    txtArtworkImage3.setText(value3 != null ? value3.toString() : "");
-                } catch (Exception ex) {
-                    txtArtworkImage1.setText("");
-                    txtArtworkImage2.setText("");
-                    txtArtworkImage3.setText("");
-                    showMessage("Error", "Failed to load artwork image data: " + ex.getMessage());
-                }
-
-                if (row != -1) {
-                    String image1 = tblArtworks.getValueAt(row, 5) != null ? tblArtworks.getValueAt(row, 5).toString().trim() : "";
-                    String image2 = tblArtworks.getValueAt(row, 6) != null ? tblArtworks.getValueAt(row, 6).toString().trim() : "";
-                    String image3 = tblArtworks.getValueAt(row, 7) != null ? tblArtworks.getValueAt(row, 7).toString().trim() : "";
-
-                    openImagesInBrowser(image1, image2, image3);
-                }
-            }
-        });
-    }
 
     private void openImagesInBrowser(String image1, String image2, String image3) {
         try {
@@ -414,97 +335,6 @@ public class MuseumGUI extends JFrame implements Observer {
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // Button action methods
-    private void addArtistButtonClicked() {
-        controller.addArtist(
-                getArtistName(),
-                getArtistBirthDate(),
-                getArtistBirthPlace(),
-                getArtistNationality(),
-                getArtistPhoto()
-        );
-        clearFilterFields();
-    }
-
-    private void updateArtistButtonClicked() {
-        controller.updateArtist(
-                getArtistName(),
-                getArtistBirthDate(),
-                getArtistBirthPlace(),
-                getArtistNationality(),
-                getArtistPhoto()
-        );
-        clearFilterFields();
-    }
-
-    private void deleteArtistButtonClicked() {
-        controller.deleteArtist(getArtistName());
-        clearFilterFields();
-    }
-
-    private void searchArtistButtonClicked() {
-        controller.searchArtist(getArtistName());
-        clearFilterFields();
-    }
-
-    private void addArtworkButtonClicked() {
-        controller.addArtwork(
-                getArtworkArtistId(),
-                getArtworkTitle(),
-                getArtworkType(),
-                getArtworkDescription(),
-                getArtworkImage1(),
-                getArtworkImage2(),
-                getArtworkImage3()
-        );
-        clearFilterFields();
-    }
-
-    private void updateArtworkButtonClicked() {
-        controller.updateArtwork(
-                getArtworkArtistId(),
-                getArtworkTitle(),
-                getArtworkType(),
-                getArtworkDescription(),
-                getArtworkImage1(),
-                getArtworkImage2(),
-                getArtworkImage3()
-        );
-        clearFilterFields();
-    }
-
-    private void deleteArtworkButtonClicked() {
-        controller.deleteArtwork(getArtworkTitle());
-        clearFilterFields();
-    }
-
-    private void searchArtworkButtonClicked() {
-        controller.searchArtwork(getArtworkTitle());
-        clearFilterFields();
-    }
-
-    private void loadArtistsButtonClicked() {
-        controller.loadArtists();
-    }
-
-    private void loadArtworksButtonClicked() {
-        controller.loadArtworks();
-    }
-
-    private void saveArtworksToCSVButtonClicked() {
-        controller.saveArtworksToCSV();
-    }
-
-    private void saveArtworksToDOCButtonClicked() {
-        controller.saveArtworksToDOC();
-    }
-
-    private void filterArtworksButtonClicked() {
-        controller.filterArtworks(
-                getFilterArtistName(),
-                getFilterArtworkType()
-        );
-    }
 
     // Add this new method
     private void showStatisticsButtonClicked() {
@@ -540,6 +370,119 @@ public class MuseumGUI extends JFrame implements Observer {
 
         // Show dialog
         dialog.setVisible(true);
+    }
+
+    // Add getters for all UI components the controller needs
+    public JButton getBtnAddArtist() {
+        return btnAddArtist;
+    }
+
+    public JButton getBtnUpdateArtist() {
+        return btnUpdateArtist;
+    }
+
+    public JButton getBtnDeleteArtist() {
+        return btnDeleteArtist;
+    }
+
+    public JButton getBtnSearchArtist() {
+        return btnSearchArtist;
+    }
+
+    public JButton getBtnAddArtwork() {
+        return btnAddArtwork;
+    }
+
+    public JButton getBtnUpdateArtwork() {
+        return btnUpdateArtwork;
+    }
+
+    public JButton getBtnDeleteArtwork() {
+        return btnDeleteArtwork;
+    }
+
+    public JButton getBtnSearchArtwork() {
+        return btnSearchArtwork;
+    }
+
+    public JButton getBtnSaveArtworksToCSV() {
+        return btnSaveArtworksToCSV;
+    }
+
+    public JButton getBtnSaveArtworksToDOC() {
+        return btnSaveArtworksToDOC;
+    }
+
+    public JButton getBtnLoadArtists() {
+        return btnLoadArtists;
+    }
+
+    public JButton getBtnLoadArtworks() {
+        return btnLoadArtworks;
+    }
+
+    public JButton getBtnFilterArtworks() {
+        return btnFilterArtworks;
+    }
+
+    public JButton getBtnShowStatistics() {
+        return btnShowStatistics;
+    }
+
+    public JTable getTblArtists() {
+        return tblArtists;
+    }
+
+    public JTable getTblArtworks() {
+        return tblArtworks;
+    }
+
+    public void setArtistName(String name) {
+        txtArtistName.setText(name);
+    }
+
+    public void setArtistBirthDate(String birthDate) {
+        txtArtistBirthDate.setText(birthDate);
+    }
+
+    public void setArtistBirthPlace(String birthPlace) {
+        txtArtistBirthPlace.setText(birthPlace);
+    }
+
+    public void setArtistNationality(String nationality) {
+        txtArtistNationality.setText(nationality);
+    }
+
+    public void setArtistPhoto(String photo) {
+        txtArtistPhoto.setText(photo);
+    }
+
+    public void setArtworkArtistId(String artistId) {
+        txtArtworkArtistId.setText(artistId);
+    }
+
+    public void setArtworkTitle(String title) {
+        txtArtworkTitle.setText(title);
+    }
+
+    public void setArtworkType(String type) {
+        txtArtworkType.setText(type);
+    }
+
+    public void setArtworkDescription(String description) {
+        txtArtworkDescription.setText(description);
+    }
+
+    public void setArtworkImage1(String image) {
+        txtArtworkImage1.setText(image);
+    }
+
+    public void setArtworkImage2(String image) {
+        txtArtworkImage2.setText(image);
+    }
+
+    public void setArtworkImage3(String image) {
+        txtArtworkImage3.setText(image);
     }
 
     public static void main(String[] args) {
