@@ -3,26 +3,21 @@ package controller;
 import model.Artist;
 import model.Artwork;
 import model.Observer;
-import model.repository.ArtistRepository;
-import model.repository.ArtworkRepository;
+import model.viewmodel.MuseumViewModel;
 import view.MuseumGUI;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MuseumController {
-    private final ArtistRepository artistRepository;
-    private final ArtworkRepository artworkRepository;
+    private final MuseumViewModel viewModel;
     private final MuseumGUI view;
 
     public MuseumController(MuseumGUI view) {
         this.view = view;
-        this.artistRepository = new ArtistRepository();
-        this.artworkRepository = new ArtworkRepository();
+        this.viewModel = new MuseumViewModel();
 
-        // Register view as observer for both repositories
-        artistRepository.addObserver((Observer) view);
-        artworkRepository.addObserver((Observer) view);
+        // Register view as observer for the ViewModel
+        viewModel.addObserver((Observer) view);
     }
 
     // Artist management methods
@@ -33,12 +28,10 @@ public class MuseumController {
                 return;
             }
 
-            Artist artist = new Artist(0, name, birthDate, birthPlace, nationality, photo);
-            boolean result = artistRepository.addArtist(artist);
+            boolean result = viewModel.addArtist(new model.Artist(0, name, birthDate, birthPlace, nationality, photo));
 
             if (result) {
                 view.showMessage("Success", "Artist added successfully!");
-                loadArtists();
             } else {
                 view.showMessage("Error", "Failed to add artist!");
             }
@@ -55,25 +48,24 @@ public class MuseumController {
             }
 
             // Search for the artist by name
-            List<Artist> artists = artistRepository.searchArtistByName(name);
+            var artists = viewModel.searchArtists(name);
             if (artists.isEmpty()) {
                 view.showMessage("Error", "Artist not found!");
                 return;
             }
 
             // Update the artist
-            Artist artist = artists.get(0);
+            var artist = artists.get(0);
             artist.setNume(name);
             artist.setDataNasterii(birthDate);
             artist.setLocNasterii(birthPlace);
             artist.setNationalitate(nationality);
             artist.setFotografie(photo);
 
-            boolean result = artistRepository.updateArtist(artist);
+            boolean result = viewModel.updateArtist(artist);
 
             if (result) {
                 view.showMessage("Success", "Artist updated successfully!");
-                loadArtists();
             } else {
                 view.showMessage("Error", "Failed to update artist!");
             }
@@ -90,19 +82,18 @@ public class MuseumController {
             }
 
             // Search for the artist by name
-            List<Artist> artists = artistRepository.searchArtistByName(name);
+            var artists = viewModel.searchArtists(name);
             if (artists.isEmpty()) {
                 view.showMessage("Error", "Artist not found!");
                 return;
             }
 
             // Delete the artist
-            Artist artist = artists.get(0);
-            boolean result = artistRepository.deleteArtist(artist.getIdArtist());
+            var artist = artists.get(0);
+            boolean result = viewModel.deleteArtist(artist.getIdArtist());
 
             if (result) {
                 view.showMessage("Success", "Artist deleted successfully!");
-                loadArtists();
             } else {
                 view.showMessage("Error", "Failed to delete artist!");
             }
@@ -114,15 +105,16 @@ public class MuseumController {
     public void searchArtist(String name) {
         try {
             if (name.isEmpty()) {
-                view.showMessage("Error", "Artist name is required!");
+                view.showMessage("Error", "Please enter an artist name to search.");
                 return;
             }
 
-            List<Artist> artists = artistRepository.searchArtistByName(name);
+            var artists = viewModel.searchArtists(name);
             if (artists.isEmpty()) {
-                view.showMessage("Info", "No artists found!");
+                view.showMessage("Information", "No artists found with name: " + name);
             } else {
                 displayArtists(artists);
+                view.showMessage("Success", "Found " + artists.size() + " artists with name: " + name);
             }
         } catch (Exception e) {
             view.showMessage("Error", e.getMessage());
@@ -142,12 +134,11 @@ public class MuseumController {
                 return;
             }
 
-            Artwork artwork = new Artwork(0, artistId, title, type, description, image1, image2, image3);
-            boolean result = artworkRepository.addArtwork(artwork);
+            model.Artwork artwork = new model.Artwork(0, artistId, title, type, description, image1, image2, image3);
+            boolean result = viewModel.addArtwork(artwork);
 
             if (result) {
                 view.showMessage("Success", "Artwork added successfully!");
-                loadArtworks();
             } else {
                 view.showMessage("Error", "Failed to add artwork!");
             }
@@ -168,13 +159,13 @@ public class MuseumController {
                 return;
             }
 
-            List<Artwork> artworks = artworkRepository.searchArtworkByTitle(title);
+            var artworks = viewModel.searchArtworks(title);
             if (artworks.isEmpty()) {
                 view.showMessage("Error", "Artwork not found!");
                 return;
             }
 
-            Artwork artwork = artworks.get(0);
+            var artwork = artworks.get(0);
             artwork.setArtistId(artistId);
             artwork.setTitlu(title);
             artwork.setTip(type);
@@ -183,11 +174,10 @@ public class MuseumController {
             artwork.setImagine2(image2);
             artwork.setImagine3(image3);
 
-            boolean result = artworkRepository.updateArtwork(artwork);
+            boolean result = viewModel.updateArtwork(artwork);
 
             if (result) {
                 view.showMessage("Success", "Artwork updated successfully!");
-                loadArtworks();
             } else {
                 view.showMessage("Error", "Failed to update artwork!");
             }
@@ -203,18 +193,17 @@ public class MuseumController {
                 return;
             }
 
-            List<Artwork> artworks = artworkRepository.searchArtworkByTitle(title);
+            var artworks = viewModel.searchArtworks(title);
             if (artworks.isEmpty()) {
                 view.showMessage("Error", "Artwork not found!");
                 return;
             }
 
-            Artwork artwork = artworks.get(0);
-            boolean result = artworkRepository.deleteArtwork(artwork.getIdArtwork());
+            var artwork = artworks.get(0);
+            boolean result = viewModel.deleteArtwork(artwork.getIdArtwork());
 
             if (result) {
                 view.showMessage("Success", "Artwork deleted successfully!");
-                loadArtworks();
             } else {
                 view.showMessage("Error", "Failed to delete artwork!");
             }
@@ -230,7 +219,7 @@ public class MuseumController {
                 return;
             }
 
-            List<Artwork> artworks = artworkRepository.searchArtworkByTitle(title);
+            var artworks = viewModel.searchArtworks(title);
             if (artworks.isEmpty()) {
                 view.showMessage("Info", "No artworks found!");
             } else {
@@ -244,11 +233,14 @@ public class MuseumController {
     // Data loading methods
     public void loadArtists() {
         try {
-            List<Artist> artists = artistRepository.getAllArtists();
+            viewModel.loadArtists();
+            var artists = viewModel.getCurrentArtists();
             if (artists.isEmpty()) {
                 view.showMessage("Info", "No artists found in the database!");
             } else {
-                displayArtists(artists);
+                Object[][] artistData = viewModel.getArtistsAsTableData();
+                String[] columnNames = viewModel.getArtistTableColumnNames();
+                view.setArtistTable(artistData, columnNames);
             }
         } catch (Exception e) {
             view.showMessage("Error", "Failed to load artists: " + e.getMessage());
@@ -257,11 +249,14 @@ public class MuseumController {
 
     public void loadArtworks() {
         try {
-            List<Artwork> artworks = artworkRepository.getAllArtworks();
+            viewModel.loadArtworks();
+            var artworks = viewModel.getCurrentArtworks();
             if (artworks.isEmpty()) {
                 view.showMessage("Info", "No artworks found in the database!");
             } else {
-                displayArtworks(artworks);
+                Object[][] artworkData = viewModel.getArtworksAsTableData();
+                String[] columnNames = viewModel.getArtworkTableColumnNames();
+                view.setArtworkTable(artworkData, columnNames);
             }
         } catch (Exception e) {
             view.showMessage("Error", "Failed to load artworks: " + e.getMessage());
@@ -270,16 +265,12 @@ public class MuseumController {
 
     public void loadArtistArtworks(int artistId) {
         try {
-            List<Artwork> artworks = artworkRepository.getArtworksByArtistId(artistId);
-            if (artworks.isEmpty()) {
+            viewModel.loadArtistArtworks(artistId);
+            var artworkTitles = viewModel.getCurrentArtistArtworks();
+
+            if (artworkTitles.isEmpty()) {
                 view.showMessage("Info", "This artist has no artworks in the museum.");
             } else {
-                // Create a list of artwork titles to display
-                List<String> artworkTitles = new ArrayList<>();
-                for (Artwork artwork : artworks) {
-                    artworkTitles.add(artwork.getTitlu() + " (" + artwork.getTip() + ")");
-                }
-                // Display the list of artworks
                 view.displayArtistArtworks(artworkTitles);
             }
         } catch (Exception e) {
@@ -290,14 +281,14 @@ public class MuseumController {
     // File export methods
     public void saveArtworksToCSV() {
         try {
-            List<Artwork> artworks = artworkRepository.getAllArtworks();
+            var artworks = viewModel.getCurrentArtworks();
             if (artworks.isEmpty()) {
                 view.showMessage("Error", "No artworks to save!");
                 return;
             }
 
             String filePath = "artworks.csv";
-            boolean result = artworkRepository.saveArtworksToCSV(artworks, filePath);
+            boolean result = viewModel.saveArtworksToCSV(filePath);
 
             if (result) {
                 view.showMessage("Success", "Artworks saved to CSV successfully!");
@@ -311,14 +302,14 @@ public class MuseumController {
 
     public void saveArtworksToDOC() {
         try {
-            List<Artwork> artworks = artworkRepository.getAllArtworks();
+            var artworks = viewModel.getCurrentArtworks();
             if (artworks.isEmpty()) {
                 view.showMessage("Error", "No artworks to save!");
                 return;
             }
 
             String filePath = "artworks.doc";
-            boolean result = artworkRepository.saveArtworksToDOC(artworks, filePath);
+            boolean result = viewModel.saveArtworksToDOC(filePath);
 
             if (result) {
                 view.showMessage("Success", "Artworks saved to DOC successfully!");
@@ -338,7 +329,7 @@ public class MuseumController {
                 return;
             }
 
-            List<Artwork> artworks = artistRepository.filterArtworks(artistName, artworkType);
+            var artworks = viewModel.filterArtworks(artistName, artworkType);
 
             if (artworks.isEmpty()) {
                 view.showMessage("Info", "No artworks found matching your criteria!");
@@ -351,8 +342,13 @@ public class MuseumController {
         }
     }
 
-    // Helper methods for displaying data
+    /// Helper methods for displaying data
     private void displayArtists(List<Artist> artists) {
+        if (artists == null || artists.isEmpty()) {
+            view.setArtistTable(new Object[0][0], new String[]{"ID", "Name", "Birth Date", "Birth Place", "Nationality", "Photo"});
+            return;
+        }
+
         Object[][] data = new Object[artists.size()][6];
         for (int i = 0; i < artists.size(); i++) {
             Artist artist = artists.get(i);
@@ -369,6 +365,11 @@ public class MuseumController {
     }
 
     private void displayArtworks(List<Artwork> artworks) {
+        if (artworks == null || artworks.isEmpty()) {
+            view.setArtworkTable(new Object[0][0], new String[]{"ID", "Artist ID", "Title", "Type", "Description", "Image 1", "Image 2", "Image 3"});
+            return;
+        }
+
         Object[][] data = new Object[artworks.size()][8];
         for (int i = 0; i < artworks.size(); i++) {
             Artwork artwork = artworks.get(i);

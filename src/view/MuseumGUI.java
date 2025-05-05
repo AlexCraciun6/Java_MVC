@@ -294,12 +294,23 @@ public class MuseumGUI extends JFrame implements Observer {
         txtFilterArtworkType.setText("");
     }
 
+    private boolean isUpdating = false;
     // Implementation of Observer interface
     @Override
     public void update() {
-        // Refresh data when notified of changes
-        controller.loadArtists();
-        controller.loadArtworks();
+        // Prevent recursive updates
+        if (isUpdating) {
+            return;
+        }
+
+        isUpdating = true;
+        try {
+            // Refresh data when notified of changes
+            controller.loadArtists();
+            controller.loadArtworks();
+        } finally {
+            isUpdating = false;
+        }
     }
 
     // Methods to access form data
