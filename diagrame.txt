@@ -196,3 +196,423 @@ MuseumViewModel --> ArtworkRepository : uses
 MuseumGUI ..> StatisticsService : uses
 
 @enduml
+
+
+///////////////////////// diagrame de secventa //////////////
+
+
+Actor -> MuseumGUI: Completează câmpurile artistului
+Actor -> MuseumGUI: Click pe "Add Artist"
+MuseumGUI -> MuseumController: addArtist(name, birthDate, birthPlace, nationality, photo)
+MuseumController -> MuseumController: validează câmpurile
+alt câmpuri valide
+    MuseumController -> MuseumViewModel: addArtist(new Artist(...))
+    MuseumViewModel -> ArtistRepository: addArtist(Artist)
+    ArtistRepository -> Repository: executeSQLCommand(INSERT SQL)
+    Repository --> ArtistRepository: rezultat (boolean)
+    alt adăugare reușită
+        ArtistRepository -> ArtistRepository: notifyObservers()
+        ArtistRepository -> MuseumGUI: update()
+        MuseumGUI -> MuseumController: loadArtists()
+        MuseumController -> MuseumViewModel: loadArtists()
+        MuseumViewModel -> ArtistRepository: getAllArtists()
+        ArtistRepository -> Repository: executeSQLQuery(SELECT SQL)
+        Repository --> ArtistRepository: ResultSet
+        ArtistRepository --> MuseumViewModel: List<Artist>
+        MuseumViewModel -> MuseumViewModel: notifyObservers()
+        MuseumViewModel -> MuseumGUI: update()
+        MuseumGUI -> MuseumController: loadArtists()
+    end
+    MuseumViewModel --> MuseumController: rezultat (boolean)
+    MuseumController -> MuseumGUI: showMessage("Success", "Artist added successfully!")
+else câmpuri invalide
+    MuseumController -> MuseumGUI: showMessage("Error", "All fields are required!")
+end
+
+
+Actor -> MuseumGUI: Completează numele artistului
+Actor -> MuseumGUI: Click pe "Delete Artist"
+MuseumGUI -> MuseumController: deleteArtist(name)
+MuseumController -> MuseumController: validează numele
+alt nume valid
+    MuseumController -> MuseumViewModel: searchArtists(name)
+    MuseumViewModel -> ArtistRepository: searchArtistByName(name)
+    ArtistRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtistRepository: ResultSet
+    ArtistRepository --> MuseumViewModel: List<Artist>
+    MuseumViewModel --> MuseumController: List<Artist>
+    alt artist găsit
+        MuseumController -> MuseumViewModel: deleteArtist(artistId)
+        MuseumViewModel -> ArtistRepository: deleteArtist(artistId)
+        ArtistRepository -> Repository: executeSQLCommand(DELETE SQL)
+        Repository --> ArtistRepository: rezultat (boolean)
+        alt ștergere reușită
+            ArtistRepository -> ArtistRepository: notifyObservers()
+            ArtistRepository -> MuseumGUI: update()
+            MuseumGUI -> MuseumController: loadArtists()
+        end
+        ArtistRepository --> MuseumViewModel: rezultat (boolean)
+        MuseumViewModel -> MuseumViewModel: loadArtists()
+        MuseumViewModel --> MuseumController: rezultat (boolean)
+        MuseumController -> MuseumGUI: showMessage("Success", "Artist deleted successfully!")
+    else artist negăsit
+        MuseumController -> MuseumGUI: showMessage("Error", "Artist not found!")
+    end
+else nume invalid
+    MuseumController -> MuseumGUI: showMessage("Error", "Artist name is required!")
+end
+
+
+Actor -> MuseumGUI: Click pe un artist din tabel
+MuseumGUI -> MuseumController: (event handled by table selection listener)
+MuseumController -> MuseumGUI: setArtistName, setBirthDate, etc.
+Actor -> MuseumGUI: Modifică câmpurile artistului
+Actor -> MuseumGUI: Click pe "Update Artist"
+MuseumGUI -> MuseumController: updateArtist(name, birthDate, birthPlace, nationality, photo)
+MuseumController -> MuseumController: validează câmpurile
+alt câmpuri valide
+    MuseumController -> MuseumViewModel: searchArtists(name)
+    MuseumViewModel -> ArtistRepository: searchArtistByName(name)
+    ArtistRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtistRepository: ResultSet
+    ArtistRepository --> MuseumViewModel: List<Artist>
+    MuseumViewModel --> MuseumController: List<Artist>
+    alt artist găsit
+        MuseumController -> MuseumViewModel: updateArtist(artist)
+        MuseumViewModel -> ArtistRepository: updateArtist(artist)
+        ArtistRepository -> Repository: executeSQLCommand(UPDATE SQL)
+        Repository --> ArtistRepository: rezultat (boolean)
+        alt actualizare reușită
+            ArtistRepository -> ArtistRepository: notifyObservers()
+            ArtistRepository -> MuseumGUI: update()
+            MuseumGUI -> MuseumController: loadArtists()
+        end
+        ArtistRepository --> MuseumViewModel: rezultat (boolean)
+        MuseumViewModel --> MuseumController: rezultat (boolean)
+        MuseumController -> MuseumGUI: showMessage("Success", "Artist updated successfully!")
+    else artist negăsit
+        MuseumController -> MuseumGUI: showMessage("Error", "Artist not found!")
+    end
+else câmpuri invalide
+    MuseumController -> MuseumGUI: showMessage("Error", "All fields are required!")
+end
+
+
+Actor -> MuseumGUI: Click pe "Load Artists"
+MuseumGUI -> MuseumController: loadArtists()
+MuseumController -> MuseumViewModel: loadArtists()
+MuseumViewModel -> ArtistRepository: getAllArtists()
+ArtistRepository -> Repository: executeSQLQuery(SELECT SQL)
+Repository --> ArtistRepository: ResultSet
+ArtistRepository --> MuseumViewModel: List<Artist>
+MuseumViewModel -> MuseumViewModel: notifyObservers()
+MuseumController -> MuseumViewModel: getArtistsAsTableData(), getArtistTableColumnNames()
+MuseumViewModel --> MuseumController: Object[][], String[]
+MuseumController -> MuseumGUI: setArtistTable(data, columnNames)
+alt artiști găsiți
+    MuseumGUI: afișează artiștii în tabel
+else niciun artist
+    MuseumController -> MuseumGUI: showMessage("Info", "No artists found in the database!")
+end
+
+
+Actor -> MuseumGUI: Completează numele artistului
+Actor -> MuseumGUI: Click pe "Search Artist"
+MuseumGUI -> MuseumController: searchArtist(name)
+MuseumController -> MuseumController: validează numele
+alt nume valid
+    MuseumController -> MuseumViewModel: searchArtists(name)
+    MuseumViewModel -> ArtistRepository: searchArtistByName(name)
+    ArtistRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtistRepository: ResultSet
+    ArtistRepository --> MuseumViewModel: List<Artist>
+    MuseumViewModel --> MuseumController: List<Artist>
+    MuseumController -> MuseumController: displayArtists(artists)
+    alt artiști găsiți
+        MuseumController -> MuseumGUI: setArtistTable(data, columnNames)
+        MuseumGUI: afișează artiștii găsiți
+        MuseumController -> MuseumGUI: showMessage("Success", "Found X artists with name: " + name)
+    else niciun artist
+        MuseumController -> MuseumGUI: showMessage("Information", "No artists found with name: " + name)
+    end
+else nume invalid
+    MuseumController -> MuseumGUI: showMessage("Error", "Please enter an artist name to search.")
+end
+
+
+Actor -> MuseumGUI: Completează câmpurile operei de artă
+Actor -> MuseumGUI: Click pe "Add Artwork"
+MuseumGUI -> MuseumController: addArtwork(artistId, title, type, description, image1, image2, image3)
+MuseumController -> MuseumController: validează câmpurile
+alt câmpuri valide
+    MuseumController -> MuseumViewModel: addArtwork(new Artwork(...))
+    MuseumViewModel -> ArtworkRepository: addArtwork(Artwork)
+    ArtworkRepository -> Repository: executeSQLCommand(INSERT SQL)
+    Repository --> ArtworkRepository: rezultat (boolean)
+    alt adăugare reușită
+        ArtworkRepository -> ArtworkRepository: notifyObservers()
+        ArtworkRepository -> MuseumGUI: update()
+        MuseumGUI -> MuseumController: loadArtworks()
+        MuseumController -> MuseumViewModel: loadArtworks()
+        MuseumViewModel -> ArtworkRepository: getAllArtworks()
+        ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL)
+        Repository --> ArtworkRepository: ResultSet
+        ArtworkRepository --> MuseumViewModel: List<Artwork>
+        MuseumViewModel -> MuseumViewModel: notifyObservers()
+        MuseumViewModel -> MuseumGUI: update()
+        MuseumController -> MuseumGUI: showMessage("Success", "Artwork added successfully!")
+    end
+else câmpuri invalide
+    MuseumController -> MuseumGUI: showMessage("Error", "All fields are required!")
+end
+
+
+
+Actor -> MuseumGUI: Completează titlul operei de artă
+Actor -> MuseumGUI: Click pe "Delete Artwork"
+MuseumGUI -> MuseumController: deleteArtwork(title)
+MuseumController -> MuseumController: validează titlul
+alt titlu valid
+    MuseumController -> MuseumViewModel: searchArtworks(title)
+    MuseumViewModel -> ArtworkRepository: searchArtworkByTitle(title)
+    ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtworkRepository: ResultSet
+    ArtworkRepository --> MuseumViewModel: List<Artwork>
+    MuseumViewModel --> MuseumController: List<Artwork>
+    alt operă găsită
+        MuseumController -> MuseumViewModel: deleteArtwork(artworkId)
+        MuseumViewModel -> ArtworkRepository: deleteArtwork(artworkId)
+        ArtworkRepository -> Repository: executeSQLCommand(DELETE SQL)
+        Repository --> ArtworkRepository: rezultat (boolean)
+        alt ștergere reușită
+            ArtworkRepository -> ArtworkRepository: notifyObservers()
+            ArtworkRepository -> MuseumGUI: update()
+            MuseumGUI -> MuseumController: loadArtworks()
+        end
+        ArtworkRepository --> MuseumViewModel: rezultat (boolean)
+        MuseumViewModel --> MuseumController: rezultat (boolean)
+        MuseumController -> MuseumGUI: showMessage("Success", "Artwork deleted successfully!")
+    else operă negăsită
+        MuseumController -> MuseumGUI: showMessage("Error", "Artwork not found!")
+    end
+else titlu invalid
+    MuseumController -> MuseumGUI: showMessage("Error", "Artwork title is required!")
+end
+
+
+Actor -> MuseumGUI: Click pe o operă de artă din tabel
+MuseumGUI -> MuseumController: (event handled by table selection listener)
+MuseumController -> MuseumGUI: setArtworkArtistId, setArtworkTitle, etc.
+Actor -> MuseumGUI: Modifică câmpurile operei
+Actor -> MuseumGUI: Click pe "Update Artwork"
+MuseumGUI -> MuseumController: updateArtwork(artistId, title, type, description, image1, image2, image3)
+MuseumController -> MuseumController: validează câmpurile
+alt câmpuri valide
+    MuseumController -> MuseumViewModel: searchArtworks(title)
+    MuseumViewModel -> ArtworkRepository: searchArtworkByTitle(title)
+    ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtworkRepository: ResultSet
+    ArtworkRepository --> MuseumViewModel: List<Artwork>
+    MuseumViewModel --> MuseumController: List<Artwork>
+    alt operă găsită
+        MuseumController -> MuseumViewModel: updateArtwork(artwork)
+        MuseumViewModel -> ArtworkRepository: updateArtwork(artwork)
+        ArtworkRepository -> Repository: executeSQLCommand(UPDATE SQL)
+        Repository --> ArtworkRepository: rezultat (boolean)
+        alt actualizare reușită
+            ArtworkRepository -> ArtworkRepository: notifyObservers()
+            ArtworkRepository -> MuseumGUI: update()
+            MuseumGUI -> MuseumController: loadArtworks()
+        end
+        ArtworkRepository --> MuseumViewModel: rezultat (boolean)
+        MuseumViewModel --> MuseumController: rezultat (boolean)
+        MuseumController -> MuseumGUI: showMessage("Success", "Artwork updated successfully!")
+    else operă negăsită
+        MuseumController -> MuseumGUI: showMessage("Error", "Artwork not found!")
+    end
+else câmpuri invalide
+    MuseumController -> MuseumGUI: showMessage("Error", "All fields are required!")
+end
+
+
+
+Actor -> MuseumGUI: Click pe "Load Artworks"
+MuseumGUI -> MuseumController: loadArtworks()
+MuseumController -> MuseumViewModel: loadArtworks()
+MuseumViewModel -> ArtworkRepository: getAllArtworks()
+ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL)
+Repository --> ArtworkRepository: ResultSet
+ArtworkRepository --> MuseumViewModel: List<Artwork>
+MuseumViewModel -> MuseumViewModel: notifyObservers()
+MuseumController -> MuseumViewModel: getArtworksAsTableData(), getArtworkTableColumnNames()
+MuseumViewModel --> MuseumController: Object[][], String[]
+MuseumController -> MuseumGUI: setArtworkTable(data, columnNames)
+alt opere găsite
+    MuseumGUI: afișează operele în tabel
+else nicio operă
+    MuseumController -> MuseumGUI: showMessage("Info", "No artworks found in the database!")
+end
+
+
+
+Actor -> MuseumGUI: Completează titlul operei de artă
+Actor -> MuseumGUI: Click pe "Search Artwork"
+MuseumGUI -> MuseumController: searchArtwork(title)
+MuseumController -> MuseumController: validează titlul
+alt titlu valid
+    MuseumController -> MuseumViewModel: searchArtworks(title)
+    MuseumViewModel -> ArtworkRepository: searchArtworkByTitle(title)
+    ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL)
+    Repository --> ArtworkRepository: ResultSet
+    ArtworkRepository --> MuseumViewModel: List<Artwork>
+    MuseumViewModel --> MuseumController: List<Artwork>
+    MuseumController -> MuseumController: displayArtworks(artworks)
+    alt opere găsite
+        MuseumController -> MuseumGUI: setArtworkTable(data, columnNames)
+        MuseumGUI: afișează operele găsite
+        MuseumController -> MuseumGUI: showMessage("Success", "Found X artworks with title: " + title)
+    else nicio operă găsită
+        MuseumController -> MuseumGUI: showMessage("Information", "No artworks found with title: " + title)
+    end
+else titlu invalid
+    MuseumController -> MuseumGUI: showMessage("Error", "Please enter an artwork title to search.")
+end
+
+
+Actor -> MuseumGUI: Completează numele artistului în câmpul de filtrare
+Actor -> MuseumGUI: Lasă câmpul de tip gol
+Actor -> MuseumGUI: Click pe "Filter Artworks"
+MuseumGUI -> MuseumController: filterArtworks(artistName, "")
+MuseumController -> MuseumViewModel: filterArtworks(artistName, "")
+MuseumViewModel -> ArtistRepository: filterArtworks(artistName, "")
+ArtistRepository -> Repository: executeSQLQuery(SELECT SQL with WHERE artist_name LIKE...)
+Repository --> ArtistRepository: ResultSet
+ArtistRepository --> MuseumViewModel: List<Artwork>
+MuseumViewModel --> MuseumController: List<Artwork>
+MuseumController -> MuseumController: convertToTableData(filteredArtworks)
+MuseumController -> MuseumGUI: setArtworkTable(tableData, columnNames)
+alt opere găsite
+    MuseumGUI: afișează operele filtrate în tabel
+else nicio operă
+    MuseumController -> MuseumGUI: showMessage("Information", "No artworks found for artist: " + artistName)
+end
+
+
+
+Actor -> MuseumGUI: Completează tipul operei în câmpul de filtrare
+Actor -> MuseumGUI: Lasă câmpul de artist gol
+Actor -> MuseumGUI: Click pe "Filter Artworks"
+MuseumGUI -> MuseumController: filterArtworks("", artworkType)
+MuseumController -> MuseumViewModel: filterArtworks("", artworkType)
+MuseumViewModel -> ArtistRepository: filterArtworks("", artworkType)
+ArtistRepository -> Repository: executeSQLQuery(SELECT SQL with WHERE tip = ...)
+Repository --> ArtistRepository: ResultSet
+ArtistRepository --> MuseumViewModel: List<Artwork>
+MuseumViewModel --> MuseumController: List<Artwork>
+MuseumController -> MuseumController: convertToTableData(filteredArtworks)
+MuseumController -> MuseumGUI: setArtworkTable(tableData, columnNames)
+alt opere găsite
+    MuseumGUI: afișează operele filtrate în tabel
+else nicio operă
+    MuseumController -> MuseumGUI: showMessage("Information", "No artworks found of type: " + artworkType)
+end
+
+
+Actor -> MuseumGUI: Click pe "Save to CSV"
+MuseumGUI -> MuseumController: saveArtworksToCSV()
+MuseumController -> MuseumController: showSaveFileDialog("CSV files", "csv")
+MuseumGUI --> MuseumController: selectedFilePath
+alt utilizatorul a ales un fișier
+    MuseumController -> MuseumViewModel: saveArtworksToCSV(filePath)
+    MuseumViewModel -> ArtworkRepository: saveArtworksToCSV(artworks, filePath)
+    ArtworkRepository -> FileWriter: write(csvContent)
+    FileWriter --> ArtworkRepository: success/failure
+    ArtworkRepository --> MuseumViewModel: boolean result
+    MuseumViewModel --> MuseumController: boolean result
+    alt salvare reușită
+        MuseumController -> MuseumGUI: showMessage("Success", "Artworks saved to CSV file successfully!")
+    else eroare
+        MuseumController -> MuseumGUI: showMessage("Error", "Failed to save artworks to CSV file.")
+    end
+else dialog anulat
+    MuseumController -> MuseumController: (no action)
+end
+
+
+
+Actor -> MuseumGUI: Click pe "Save to DOC"
+MuseumGUI -> MuseumController: saveArtworksToDOC()
+MuseumController -> MuseumController: showSaveFileDialog("DOC files", "doc")
+MuseumGUI --> MuseumController: selectedFilePath
+alt utilizatorul a ales un fișier
+    MuseumController -> MuseumViewModel: saveArtworksToDOC(filePath)
+    MuseumViewModel -> ArtworkRepository: saveArtworksToDOC(artworks, filePath)
+    ArtworkRepository -> FileWriter: write(docContent)
+    FileWriter --> ArtworkRepository: success/failure
+    ArtworkRepository --> MuseumViewModel: boolean result
+    MuseumViewModel --> MuseumController: boolean result
+    alt salvare reușită
+        MuseumController -> MuseumGUI: showMessage("Success", "Artworks saved to DOC file successfully!")
+    else eroare
+        MuseumController -> MuseumGUI: showMessage("Error", "Failed to save artworks to DOC file.")
+    end
+else dialog anulat
+    MuseumController -> MuseumController: (no action)
+end
+
+
+
+Actor -> MuseumGUI: Click pe un artist din tabel
+MuseumGUI -> MuseumController: (event handled by table selection listener)
+MuseumController -> MuseumGUI: getTblArtists().getSelectedRow()
+MuseumGUI --> MuseumController: selectedRow
+alt rând valid
+    MuseumController -> MuseumGUI: getTblArtists().getValueAt(selectedRow, 0)
+    MuseumGUI --> MuseumController: artistId
+    MuseumController -> MuseumController: loadArtistArtworks(artistId)
+    MuseumController -> MuseumViewModel: loadArtistArtworks(artistId)
+    MuseumViewModel -> ArtworkRepository: getArtworksByArtistId(artistId)
+    ArtworkRepository -> Repository: executeSQLQuery(SELECT SQL WHERE artist_id = ...)
+    Repository --> ArtworkRepository: ResultSet
+    ArtworkRepository --> MuseumViewModel: List<Artwork>
+    MuseumViewModel -> MuseumViewModel: updateCurrentArtistArtworks()
+    MuseumViewModel -> MuseumViewModel: notifyObservers()
+    MuseumViewModel --> MuseumGUI: update()
+    MuseumController -> MuseumGUI: setArtistName((String) view.getTblArtists().getValueAt(selectedRow, 1))
+    MuseumController -> MuseumGUI: setArtistBirthDate(...)
+    MuseumController -> MuseumGUI: setArtistBirthPlace(...)
+    MuseumController -> MuseumGUI: setArtistNationality(...)
+    MuseumController -> MuseumGUI: setArtistPhoto(...)
+    MuseumController -> MuseumViewModel: getCurrentArtistArtworks()
+    MuseumViewModel --> MuseumController: List<String>
+    MuseumController -> MuseumGUI: displayArtistArtworks(artworkTitles)
+    MuseumGUI: populează formularul cu detaliile artistului și lista de opere
+end
+
+
+
+Actor -> MuseumGUI: Click pe "Show Statistics"
+MuseumGUI -> MuseumController: showStatistics()
+MuseumController -> MuseumController: loadArtworksIfNeeded()
+MuseumController -> MuseumViewModel: getArtworksByTypeStatistics()
+MuseumViewModel -> MuseumViewModel: calculateArtworksByType()
+MuseumViewModel --> MuseumController: Map<String, Integer> artworksByType
+MuseumController -> MuseumViewModel: getArtworksByArtistStatistics()
+MuseumViewModel -> MuseumViewModel: calculateArtworksByArtist()
+MuseumViewModel --> MuseumController: Map<String, Integer> artworksByArtist
+MuseumController -> MuseumGUI: showStatisticsDialog(artworksByType, artworksByArtist)
+MuseumGUI -> StatisticsService: createPieChart("Artworks by Type", artworksByType)
+StatisticsService -> JFreeChart: ChartFactory.createPieChart(...)
+JFreeChart --> StatisticsService: chart
+StatisticsService -> ChartPanel: new ChartPanel(chart)
+ChartPanel --> StatisticsService: chartPanel
+StatisticsService --> MuseumGUI: JPanel
+MuseumGUI -> StatisticsService: createBarChart("Artworks by Artist", artworksByArtist)
+StatisticsService -> JFreeChart: ChartFactory.createBarChart(...)
+JFreeChart --> StatisticsService: chart
+StatisticsService -> ChartPanel: new ChartPanel(chart)
+ChartPanel --> StatisticsService: chartPanel
+StatisticsService --> MuseumGUI: JPanel
+MuseumGUI -> JDialog: creează dialog cu grafice statistice
+MuseumGUI: afișează dialogul cu grafice statistice
+Actor -> MuseumGUI: Închide dialogul
